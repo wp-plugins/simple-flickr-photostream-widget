@@ -1,6 +1,6 @@
 <?php 
 /*
-Plugin Name: Simpe Flickr Photostream
+Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/
 Description: Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
