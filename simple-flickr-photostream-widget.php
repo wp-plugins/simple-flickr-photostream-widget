@@ -1,7 +1,7 @@
 <?php 
 /*
 Plugin Name: Simple Flickr Photostream
-Plugin URI: http://www.ai-development.com/
+Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
 Version: 1.0
