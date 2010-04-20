@@ -27,5 +27,8 @@ This section describes how to install the plugin and get it working.
 
 == Changelog ==
 
+= 1.1 =
+* Fix a bug in source dropdown. When a user was selecting a source for the first time, before saving the widget, some input fields where not hiding correctly. 
+
 = 1.0 =
 * First release

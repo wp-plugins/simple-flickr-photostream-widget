@@ -4,9 +4,58 @@ Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.0
+Version: 1.1
 Author URI:http://www.ai-development.com/
 */
+
+/* Add javascript include in admin pages */
+
+add_action('admin_head', 'simple_flickr_admin_head');
+
+function simple_flickr_admin_head(){ ?>
+<script type="text/javascript">
+
+	function toggleCache(e, id){
+		if(jQuery('#'+e).is(':checked')){
+			jQuery('#'+id).show()
+		}else{
+			jQuery('#'+id).hide()
+		}
+	}
+
+	function toggleSource(e){
+
+		if(jQuery('#'+e).val() == 'user'){
+			jQuery('#'+e).parent().nextAll('p.set_parent').hide();
+			jQuery('#'+e).parent().nextAll('p.id_parent').show();
+			jQuery('#'+e).parent().nextAll('p.tags_parent').show();
+		}
+		if(jQuery('#'+e).val() == 'set'){
+			jQuery('#'+e).parent().nextAll('p.set_parent').show();
+			jQuery('#'+e).parent().nextAll('p.id_parent').show();
+			jQuery('#'+e).parent().nextAll('p.tags_parent').hide();
+		}
+		if(jQuery('#'+e).val() == 'favorite'){
+			jQuery('#'+e).parent().nextAll('p.set_parent').hide();
+			jQuery('#'+e).parent().nextAll('p.id_parent').show();
+			jQuery('#'+e).parent().nextAll('p.tags_parent').hide();
+		}
+		if(jQuery('#'+e).val() == 'group'){
+			jQuery('#'+e).parent().nextAll('p.set_parent').hide();
+			jQuery('#'+e).parent().nextAll('p.id_parent').show();
+			jQuery('#'+e).parent().nextAll('p.tags_parent').hide();
+		}
+		if(jQuery('#'+e).val() == 'public'){
+			jQuery('#'+e).parent().nextAll('p.set_parent').hide();
+			jQuery('#'+e).parent().nextAll('p.id_parent').hide();
+			jQuery('#'+e).parent().nextAll('p.tags_parent').show();
+		}
+	}
+	
+</script>
+<?php
+
+}
 
 /* Add our function to the widgets_init hook. */
 add_action( 'widgets_init', 'bbox_widgets' );
@@ -186,7 +235,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					<option <?php if ($instance['num_items'] == $i) { echo 'selected'; } ?> value="<?php echo $i; ?>"><?php echo $i; ?></option>
 				<?php } ?>
 			</select>
-			<select onchange="javascript: toggleSource();" name="<?php echo $this->get_field_name( 'type' ); ?>" id="<?php echo $this->get_field_id( 'type' ); ?>">
+			<select onchange="javascript: toggleSource('<?php echo $this->get_field_id( 'type' ); ?>');" name="<?php echo $this->get_field_name( 'type' ); ?>" id="<?php echo $this->get_field_id( 'type' ); ?>">
 				<option <?php if($instance['type'] == 'user') { echo 'selected'; } ?> value="user">user</option>
 				<option <?php if($instance['type'] == 'set') { echo 'selected'; } ?> value="set">set</option>
 				<option <?php if($instance['type'] == 'favorite') { echo 'selected'; } ?> value="favorite">favorite</option>
@@ -195,21 +244,23 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			</select>
 			photos.
 		</p>
-		<p>
+		<p class="id_parent">
 			<label for="<?php echo $this->get_field_id( 'id' ); ?>">User or Group ID</label>
 			<input name="<?php echo $this->get_field_name( 'id' ); ?>" type="text" id="<?php echo $this->get_field_id( 'id' ); ?>" value="<?php echo $instance['id']; ?>" size="20" />
-			
 		</p>
-		<p>
+		<p class="set_parent">
 			<label for="<?php echo $this->get_field_id( 'set' ); ?>">Set ID</label>
 			<input name="<?php echo $this->get_field_name( 'set' ); ?>" type="text" id="<?php echo $this->get_field_id( 'set' ); ?>" value="<?php echo $instance['set']; ?>" size="40" />
 			<small>Use number from the set url</small>
 		</p>
-		<p>
+		<p class="tags_parent">
 			<label for="<?php echo $this->get_field_id( 'tags' ); ?>">Tags (optional)</label>
 			<input class="widefat" name="<?php echo $this->get_field_name( 'tags' ); ?>" type="text" id="<?php echo $this->get_field_id( 'tags' ); ?>" value="<?php echo $instance['tags']; ?>" size="40" />
 			<small>Comma separated, no spaces</small>
 		</p>
+		<script type="text/javascript">
+			toggleSource('<?php echo $this->get_field_id( 'type' ); ?>');
+		</script>
 		<div>
 			<p>HTML Builder</p>
 
@@ -239,7 +290,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			<p>
 				<label for="<?php echo $this->get_field_id( 'do_cache' ); ?>">Turn on caching:</label>
 				<input name="<?php echo $this->get_field_name( 'do_cache' ); ?>" type="checkbox" id="<?php echo $this->get_field_id( 'do_cache' ); ?>" <?php echo $instance['do_cache']==1?'checked="checked"':''; ?> value="1"
-					   onclick="javascript: toggleCache();"
+					   onclick="javascript: toggleCache('<?php echo $this->get_field_id( 'do_cache' ); ?>', '<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>');"
 					   />
 			</p>
 			
@@ -264,46 +315,10 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					<input class="widefat" name="<?php echo $this->get_field_name( 'cache_uri' ); ?>" type="text" id="<?php echo $this->get_field_id( 'cache_uri' ); ?>" value="<?php echo $instance['cache_uri']; ?>" />
 				</p>
 			</div>
+			<script type="text/javascript">
+				toggleCache('<?php echo $this->get_field_id( 'do_cache' ); ?>', '<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>');
+			</script>
 		</div>
-		<script type="text/javascript">
-			function toggleCache(){
-				if(jQuery('#<?php echo $this->get_field_id( 'do_cache' ); ?>').is(':checked')){
-					jQuery('#<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>').show()
-				}else{
-					jQuery('#<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>').hide()
-				}
-			}
-			toggleCache();
-
-			function toggleSource(){
-				if(jQuery('#<?php echo $this->get_field_id( 'type' ); ?>').val() == 'user'){
-					jQuery('#<?php echo $this->get_field_id( 'set' ); ?>').parent().hide();
-					jQuery('#<?php echo $this->get_field_id( 'id' ); ?>').parent().show();
-					jQuery('#<?php echo $this->get_field_id( 'tags' ); ?>').parent().show();
-				}
-				if(jQuery('#<?php echo $this->get_field_id( 'type' ); ?>').val() == 'set'){
-					jQuery('#<?php echo $this->get_field_id( 'set' ); ?>').parent().show();
-					jQuery('#<?php echo $this->get_field_id( 'id' ); ?>').parent().show();
-					jQuery('#<?php echo $this->get_field_id( 'tags' ); ?>').parent().hide();
-				}
-				if(jQuery('#<?php echo $this->get_field_id( 'type' ); ?>').val() == 'favorite'){
-					jQuery('#<?php echo $this->get_field_id( 'set' ); ?>').parent().hide();
-					jQuery('#<?php echo $this->get_field_id( 'id' ); ?>').parent().show();
-					jQuery('#<?php echo $this->get_field_id( 'tags' ); ?>').parent().hide();
-				}
-				if(jQuery('#<?php echo $this->get_field_id( 'type' ); ?>').val() == 'group'){
-					jQuery('#<?php echo $this->get_field_id( 'set' ); ?>').parent().hide();
-					jQuery('#<?php echo $this->get_field_id( 'id' ); ?>').parent().show();
-					jQuery('#<?php echo $this->get_field_id( 'tags' ); ?>').parent().hide();
-				}
-				if(jQuery('#<?php echo $this->get_field_id( 'type' ); ?>').val() == 'public'){
-					jQuery('#<?php echo $this->get_field_id( 'set' ); ?>').parent().hide();
-					jQuery('#<?php echo $this->get_field_id( 'id' ); ?>').parent().hide();
-					jQuery('#<?php echo $this->get_field_id( 'tags' ); ?>').parent().show();
-				}
-			}
-			toggleSource();
-		</script>
 		<?php
 	}
 
@@ -320,7 +335,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		elseif ($settings['type'] == "group") { $rss_url = 'http://api.flickr.com/services/feeds/groups_pool.gne?id=' . $settings['id'] . '&format=rss_200'; }
 		elseif ($settings['type'] == "public" || $settings['type'] == "community") { $rss_url = 'http://api.flickr.com/services/feeds/photos_public.gne?tags=' . $settings['tags'] . '&format=rss_200'; }
 		else {
-			print '<strong>No "type" parameter has been setup. Check your flickrRSS Settings page, or provide the parameter as an argument.</strong>';
+			print '<strong>No "type" parameter has been setup. Check your settings, or provide the parameter as an argument.</strong>';
 			die();
 		}
 		# get rss file
