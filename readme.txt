@@ -15,6 +15,8 @@ The plugin is essentially a widget that will show picture from a chosen Flickr s
 
 The code is based on [FlickrRss](http://eightface.com/wordpress/flickrrss/) plugin made by Dave Kellam and Stefano Verna and improves by placing the controls in the widget itself rather than an admin page. This new approach, combined with the way WP 2.7 handles widgets makes it multiwidgets enabled with different options for each widgets.
 
+Note: plugin provided as is I will not take any responsability if anything breaks. Backup backup backup...
+Note2: If you are ussing the cache function do not forget to clean up every so often. Cached pictures are not deleted automatically (yet) so you may find quite a few of them in you upload folder after a while.
 
 == Installation ==
 
