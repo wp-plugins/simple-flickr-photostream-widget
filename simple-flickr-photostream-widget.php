@@ -21,18 +21,15 @@ function simple_flickr_admin_head(){ ?>
 <?php
 }
 
-if(!get_option('sfps_cache_ids'))
-	add_option('sfps_cache_ids', array());
 
-$cache_ids = get_option('sfps_cache_ids');
+if(!get_option('sfps_cache'))
+	add_option('sfps_cache', array());
+else{
+	$sfps_cache = get_option('sfps_cache');
 
-if(!empty($cache_ids)){
-	print_r($cache_ids = get_option('sfps_cache_ids'));
-	foreach($cache_ids as $key=>$cache_id){
-		add_action('delete_transient_'.$key, 'sfps_delete_cache');
-	}
+	if($sfps_cache['expire'] < time())
+		sfps_delete_cache();
 }
-
 
 /* Add our function to the widgets_init hook. */
 add_action( 'widgets_init', 'bbox_widgets' );
@@ -44,7 +41,6 @@ function bbox_widgets() {
 class Simple_Flickr_Photostream extends WP_Widget {
 
 	function Simple_Flickr_Photostream() {
-		add_action('delete_transient_sfps_'.$this->id, array(&$this, 'sfps_delete_cache'));
 		/* Widget settings. */
 		$widget_ops = array( 'classname' => 'simple-flickr-photostream', 'description' => 'Display a Flickr Photostream' );
 
@@ -56,11 +52,6 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 	function widget( $args, $instance ) {
 		extract( $args );
-
-		#when the transient is deleted, also delete the pictures
-		//add_action('delete_transient_sfps_'.$this->id, array(&$this, 'sfps_delete_cache'));
-
-		$cache_ids = get_option('sfps_cache_ids');
 
 		$title = apply_filters('widget_title', $instance['title'] );
 		$type = $instance['type'];
@@ -78,13 +69,17 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 		$count = 0;
 
-		if($do_cache && get_transient('sfps_'.$this->id) !== false){
-			print_r($cache);
-			$pix = get_transient('sfps_'.$this->id);
+		$sfps_cache = get_option('sfps_cache');
+
+		if($do_cache && !empty($sfps_cache)){
+			$pix = $sfps_cache[$this->id];
 		}else{
 			echo 'no cache';
-			if(get_transient('sfps_'.$this->id) !== false)
-				delete_transient('sfps_'.$this->id);
+			if(!empty($sfps_cache)){
+				sfps_delete_cache();
+			}
+
+			add_option('sfps_cache', array());
 
 			if (!($rss = $this->getRSS($instance))) return;
 
@@ -161,9 +156,10 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 			#if do_cache set then save that nice array in a transcient
 			if($do_cache){
-				set_transient('sfps_'.$this->id, $pix, 60);
-				$cache_ids['sfps_'.$this->id] = $this->id;
-				update_option('sfps_cache_ids', $cache_ids);
+				$cache_all = get_option('sfps_cache');
+				$cache_all[$this->id] = $pix;
+				$cache_all['expire'] = time()+60;
+				update_option('sfps_cache', $cache_all);
 			}
 		}
 		
@@ -225,8 +221,8 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		$instance['after_list'] = $new_instance['after_list'];
 
 		#when the transient is deleted, also delete the pictures
-		add_action('delete_transient_sfps_'.$this->id, array(&$this, 'sfps_delete_cache'));
-		delete_transient('sfps_'.$this->id);
+		//add_action('delete_transient_sfps_cache','sfps_delete_cache');
+		sfps_delete_cache();
 
 		return $instance;
 	}
@@ -420,24 +416,20 @@ class Simple_Flickr_Photostream extends WP_Widget {
 	}
 }
 
-function sfps_delete_cache($transient){
-	$pix = get_transient($transient);
-
-	echo '<pre>'.print_r($pix, true).'</pre>';
-
-	foreach($pix as $pic){
-		foreach($pic['cache_real_path'] as $picpath){
-			#make sure we are talking about a jpg file here, don't want to delete random stuff or worst
-			if(is_file($picpath)){
-				echo $picpath;
-				unlink($picpath);
+function sfps_delete_cache(){
+	$cache_all = get_option('sfps_cache');
+	foreach($cache_all as $cache){
+		foreach($cache as $pic){
+			foreach($pic['cache_real_path'] as $picpath){
+				#make sure we are talking about a jpg file here, don't want to delete random stuff or worst
+				if(is_file($picpath)){
+					unlink($picpath);
+				}
 			}
 		}
 	}
 	
-	$cache_ids = get_option('sfps_cache_ids');
-	unset($cache_ids[$transient]);
-	update_option('sfps_cache_ids', $cache_ids);
+	delete_option('sfps_cache');
 }
 
 
