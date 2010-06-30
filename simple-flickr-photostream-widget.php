@@ -2,41 +2,69 @@
 /*
 Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
-Description: Display a Flickr Photostream in any widgetized area
+Description: New version with improved caching. You might want to clean up the old cache files before using the new version (in your upload folder). Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.2
+Version: 1.3
 Author URI:http://www.ai-development.com/
 */
 
-/* Add javascript include in admin pages */
+class Sfps_init{
 
-add_action('admin_head', 'simple_flickr_admin_head');
+	function Sfps_init(){
+	
+		if(!get_option('sfps_cache')){
+			add_option('sfps_cache', array());
+		}
 
-function simple_flickr_admin_head(){ ?>
+		if($sfps_cache = get_option('sfps_cache'))
+			if($sfps_cache['expire'] <= time())
+				$this->sfps_delete_cache();
 
-	<script type="text/javascript">
-		function toggleCache(a,b){jQuery("#"+a).is(":checked")?jQuery("#"+b).show():jQuery("#"+b).hide()} function toggleSource(a){if(jQuery("#"+a).val()=="user"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}if(jQuery("#"+a).val()=="set"){jQuery("#"+a).parent().nextAll("p.set_parent").show();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="favorite"){jQuery("#"+a).parent().nextAll("p.set_parent").hide(); jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="group"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="public"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").hide();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}};
-	</script>
+		/* Add our function to the widgets_init hook. */
+		add_action( 'widgets_init', array(&$this, 'sfps_widget_register'));
+		
+		/* Add javascript include in admin pages */
+		add_action('admin_head', array(&$this, 'simple_flickr_admin_head'));
+	}
 
-<?php
+	function simple_flickr_admin_head(){ ?>
+
+		<script type="text/javascript">
+			function toggleCache(a,b){jQuery("#"+a).is(":checked")?jQuery("#"+b).show():jQuery("#"+b).hide()} function toggleSource(a){if(jQuery("#"+a).val()=="user"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}if(jQuery("#"+a).val()=="set"){jQuery("#"+a).parent().nextAll("p.set_parent").show();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="favorite"){jQuery("#"+a).parent().nextAll("p.set_parent").hide(); jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="group"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="public"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").hide();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}};
+		</script>
+
+	<?php
+	}
+
+	/* Function that registers our widget. */
+	function sfps_widget_register() {
+		register_widget( 'Simple_Flickr_Photostream' );
+	}
+	
+	function sfps_delete_cache(){
+		$cache_all = get_option('sfps_cache');
+
+		//echo '<pre>'.print_r($cache_all, true).'</pre>';
+
+		foreach($cache_all as $widgetid => $cache){
+			if($widgetid == 'expire') continue;
+			
+			foreach($cache as $pic){
+				foreach($pic['cache_real_path'] as $picpath){
+					//echo $picpath."<br />";
+					chmod($picpath, 0777);
+					#make sure we are talking about a file here, don't want to delete random stuff or worst
+					if(is_file($picpath)){
+						unlink($picpath);
+					}
+				}
+			}
+		}
+		update_option('sfps_cache', array());
+	}
+
 }
 
-
-if(!get_option('sfps_cache'))
-	add_option('sfps_cache', array());
-else{
-	$sfps_cache = get_option('sfps_cache');
-
-	if($sfps_cache['expire'] < time())
-		sfps_delete_cache();
-}
-
-/* Add our function to the widgets_init hook. */
-add_action( 'widgets_init', 'bbox_widgets' );
-/* Function that registers our widget. */
-function bbox_widgets() {
-	register_widget( 'Simple_Flickr_Photostream' );
-}
 
 class Simple_Flickr_Photostream extends WP_Widget {
 
@@ -71,17 +99,12 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 		$sfps_cache = get_option('sfps_cache');
 
-		if($do_cache && !empty($sfps_cache)){
+		if($do_cache && !empty($sfps_cache[$this->id])){
 			$pix = $sfps_cache[$this->id];
 		}else{
-			echo 'no cache';
-			if(!empty($sfps_cache)){
-				sfps_delete_cache();
-			}
 
-			add_option('sfps_cache', array());
-
-			if (!($rss = $this->getRSS($instance))) return;
+			if (!($rss = $this->getRSS($instance)))
+				return;
 
 			$pix = array();
 
@@ -103,7 +126,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					'medium' => $baseurl . ".jpg",
 					'large' => $baseurl . "_b.jpg"
 				);
-				
+
 				#check if there is an image title (for html validation purposes)
 				if($item['title'] !== "")
 					$pic_title = htmlspecialchars(stripslashes($item['title']));
@@ -111,7 +134,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					$pic_title = $default_title;
 
 				$pic_url = $item['link'];
-				
+
 				$cachePath = trailingslashit($cache_uri);
 				$fullPath = trailingslashit($cache_path);
 
@@ -128,15 +151,18 @@ class Simple_Flickr_Photostream extends WP_Widget {
 						$img_to_cache = $thumbnail;
 						preg_match('<http://farm[0-9]{0,3}\.static.flickr\.com/\d+?\/([^.]*)\.jpg>', $img_to_cache, $flickrSlugMatches);
 						$flickrSlug = $flickrSlugMatches[1];
-						
+
 						if (!file_exists("$fullPath$flickrSlug.jpg")) {
+							
 							$localimage = fopen("$fullPath$flickrSlug.jpg", 'wb');
 							$remoteimage = wp_remote_fopen($img_to_cache);
 							$iscached = fwrite($localimage,$remoteimage);
 							fclose($localimage);
+							
 						} else {
 							$iscached = true;
 						}
+						
 						if($iscached){
 							$thumbnail = "$cachePath$flickrSlug.jpg";
 							$pic_real_path[$size] = "$fullPath$flickrSlug.jpg";
@@ -158,11 +184,11 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			if($do_cache){
 				$cache_all = get_option('sfps_cache');
 				$cache_all[$this->id] = $pix;
-				$cache_all['expire'] = time()+60;
+				$cache_all['expire'] = time()+(20);
 				update_option('sfps_cache', $cache_all);
 			}
 		}
-		
+
 		echo $before_widget;
 		if ( $title ) echo $before_title . $title . $after_title;
 
@@ -194,7 +220,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 			echo $toprint;
 		}
-		
+
 		echo stripslashes($after_list);
 
 		echo $after_widget;
@@ -222,7 +248,8 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 		#when the transient is deleted, also delete the pictures
 		//add_action('delete_transient_sfps_cache','sfps_delete_cache');
-		sfps_delete_cache();
+		global $sfps_instance;
+		$sfps_instance->sfps_delete_cache();
 
 		return $instance;
 	}
@@ -247,9 +274,9 @@ class Simple_Flickr_Photostream extends WP_Widget {
 				// The image sizes to cache locally. Possible values: 'square', 'thumbnail', 'small', 'medium' or 'large', provided within an array
 				'cache_sizes' => array('square'),
 				// Where images are saved (Server path)
-				'cache_path' => $uploaddir['path'].'',
+				'cache_path' => $uploaddir['basedir'].'',
 				// The URI associated to the cache path (web address)
-				'cache_uri' => $uploaddir['url'].'',
+				'cache_uri' => $uploaddir['baseurl'].'',
 
 				 // The number of thumbnails you want
 				'num_items' => 4,
@@ -395,42 +422,9 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		return @fetch_rss($rss_url);
 	}
 
-	function sfps_delete_cache($transient){
-		$pix = get_transient($transient);
-
-		//echo '<pre>'.print_r($pix, true).'</pre>';
-
-		foreach($pix as $pic){
-			foreach($pic['cache_real_path'] as $picpath){
-				#make sure we are talking about a jpg file here, don't want to delete random stuff or worst
-				if(is_file($picpath)){
-					unlink($picpath);
-				}
-			}
-		}
-		if(get_option('sfps_cache_ids')){
-			$cache_ids = get_option('sfps_cache_ids');
-			unset($cache_ids['sfps_'.$this->id]);
-			update_option('sfps_cache_ids', $cache_ids);
-		}
-	}
 }
 
-function sfps_delete_cache(){
-	$cache_all = get_option('sfps_cache');
-	foreach($cache_all as $cache){
-		foreach($cache as $pic){
-			foreach($pic['cache_real_path'] as $picpath){
-				#make sure we are talking about a jpg file here, don't want to delete random stuff or worst
-				if(is_file($picpath)){
-					unlink($picpath);
-				}
-			}
-		}
-	}
-	
-	delete_option('sfps_cache');
-}
-
+/* Initialise outselves */
+add_action('plugins_loaded', create_function('','global $sfps_instance; $sfps_instance = new Sfps_init();'));
 
 ?>
