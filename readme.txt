@@ -2,7 +2,7 @@
 Contributors: Benoit Gilloz
 Tags: flickr, photostream, flickr photostream, flickr widget
 Requires at least: 2.8
-Tested up to: 3.0-alpha
+Tested up to: 3.0
 Stable tag: trunk
 
 Simple Flickr Photostream widget allow you display pictures from Flickr in a widgetized area of you choice. Based on the WP 2.7 widget model
@@ -15,13 +15,12 @@ The plugin is essentially a widget that will show picture from a chosen Flickr s
 
 The code is based on [FlickrRss](http://eightface.com/wordpress/flickrrss/) plugin made by Dave Kellam and Stefano Verna and improves by placing the controls in the widget itself rather than an admin page. This new approach, combined with the way WP 2.7 handles widgets makes it multiwidgets enabled with different options for each widgets.
 
-Note: plugin provided as is. I will not take any responsability if anything breaks. Backup backup backup...
-
-Note2: If you are using the cache function do not forget to clean up every so often. Cached pictures are not deleted automatically (yet) so you may find quite a few of them in you upload folder after a while.
 
 == Installation ==
 
 This section describes how to install the plugin and get it working.
+
+If you are upgrading from previous version, do not forget to backup!
 
 1. Upload `simple-flickr-photostream-widget.php` to the `/wp-content/plugins/` directory
 1. Activate the plugin through the 'Plugins' menu in WordPress
@@ -29,6 +28,11 @@ This section describes how to install the plugin and get it working.
 
 
 == Changelog ==
+
+=1.2=
+*Improved caching system. The cached pictures should be deleted automatically when the cache expires. You will need to manually clean up the old cache files if you are upgrading from previous version and where using the cahcing system. Backup before upgrade!
+*minified javascript in admin head
+*code change to make it a bit more OOP
 
 = 1.1 =
 * Fix a bug in source dropdown. When a user was selecting a source for the first time, before saving the widget, some input fields where not hiding correctly. 
