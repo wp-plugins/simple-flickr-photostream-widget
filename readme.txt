@@ -11,7 +11,7 @@ Simple Flickr Photostream widget allow you display pictures from Flickr in a wid
 
 Simple Flickr Photostream widget is another Flickr photo display. I exists because no other plugins were doing what the author needed.
 
-The plugin is essentially a widget that will show picture from a chosen Flickr source, be it your own photostream, someone else's, one of your sets, a group, your favorite, etc...
+The plugin is essentially a widget that will show pictures from a chosen Flickr source, be it your own photostream, someone else's, one of your sets, a group, your favorite, etc...
 
 The code is based on [FlickrRss](http://eightface.com/wordpress/flickrrss/) plugin made by Dave Kellam and Stefano Verna and improves by placing the controls in the widget itself rather than an admin page. This new approach, combined with the way WP 2.7 handles widgets makes it multiwidgets enabled with different options for each widgets.
 
@@ -29,7 +29,7 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
-=1.2=
+= 1.2 =
 *Improved caching system. The cached pictures should be deleted automatically when the cache expires. You will need to manually clean up the old cache files if you are upgrading from previous version and where using the cahcing system. Backup before upgrade!
 *minified javascript in admin head
 *code change to make it a bit more OOP
