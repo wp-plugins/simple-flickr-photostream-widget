@@ -29,10 +29,10 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
-= 1.2 =
-*Improved caching system. The cached pictures should be deleted automatically when the cache expires. You will need to manually clean up the old cache files if you are upgrading from previous version and where using the cahcing system. Backup before upgrade!
-*minified javascript in admin head
-*code change to make it a bit more OOP
+= 1.3 =
+* Improved caching system. The cached pictures should be deleted automatically when the cache expires. You will need to manually clean up the old cache files if you are upgrading from previous version and where using the cahcing system. Backup before upgrade!
+* minified javascript in admin head
+* code change to make it a bit more OOP
 
 = 1.1 =
 * Fix a bug in source dropdown. When a user was selecting a source for the first time, before saving the widget, some input fields where not hiding correctly. 
