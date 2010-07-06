@@ -4,7 +4,7 @@ Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: New version with improved caching. You might want to clean up the old cache files before using the new version (in your upload folder). Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.3
+Version: 1.3.1
 Author URI:http://www.ai-development.com/
 */
 
@@ -184,7 +184,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			if($do_cache){
 				$cache_all = get_option('sfps_cache');
 				$cache_all[$this->id] = $pix;
-				$cache_all['expire'] = time()+(20);
+				$cache_all['expire'] = time()+(60*60);
 				update_option('sfps_cache', $cache_all);
 			}
 		}
