@@ -29,6 +29,9 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
+= 1.3.2 =
+* Bug Fix: when multiple sizes where used in the template, only the first occurrence was taken into account
+
 = 1.3.1 =
 * wrong cache duration, set to 1 hour now
 

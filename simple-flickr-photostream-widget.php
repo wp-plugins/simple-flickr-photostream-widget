@@ -4,7 +4,7 @@ Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: New version with improved caching. You might want to clean up the old cache files before using the new version (in your upload folder). Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.3.1
+Version: 1.3.2
 Author URI:http://www.ai-development.com/
 */
 
@@ -199,6 +199,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		$count = 0;
 		#array of pictures
 		foreach($pix as $pic){
+
 			$count++;
 			$toprint = stripslashes($html);
 
@@ -215,8 +216,9 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			$toprint = str_replace("%flickr_page%", $pic['url'], $toprint);
 			$toprint = str_replace("%title%", $pic['title'], $toprint);
 
-			preg_match('%image_([a-zA-z]*)?%', $html, $size);
-			$toprint = str_replace("%image_".$size[1]."%", $pic['cache'][$size[1]], $toprint);
+			foreach($pic['cache'] as $size => $path){
+				$toprint = str_replace("%image_".$size."%", $path, $toprint);
+			}
 
 			echo $toprint;
 		}
