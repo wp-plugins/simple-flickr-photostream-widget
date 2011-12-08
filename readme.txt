@@ -2,7 +2,7 @@
 Contributors: Benoit Gilloz
 Tags: flickr, photostream, flickr photostream, flickr widget
 Requires at least: 2.8
-Tested up to: 3.0
+Tested up to: 3.2.1
 Stable tag: trunk
 
 Simple Flickr Photostream widget allow you display pictures from Flickr in a widgetized area of you choice. Based on the WP 2.7 widget model
@@ -28,6 +28,10 @@ If you are upgrading from previous version, do not forget to backup!
 
 
 == Changelog ==
+
+= 1.3.3 =
+* Implementation change: now using cURL instead of deprecated magpie RSS parser. Falling back to file_get_contents if no cURL found.
+* Bug fix: cache problem that was showing always the same pics. 
 
 = 1.3.2 =
 * Bug Fix: when multiple sizes where used in the template, only the first occurrence was taken into account

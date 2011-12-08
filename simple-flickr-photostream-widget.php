@@ -4,7 +4,7 @@ Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: New version with improved caching. You might want to clean up the old cache files before using the new version (in your upload folder). Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.3.2
+Version: 1.3.3
 Author URI:http://www.ai-development.com/
 */
 
@@ -65,7 +65,6 @@ class Sfps_init{
 
 }
 
-
 class Simple_Flickr_Photostream extends WP_Widget {
 
 	function Simple_Flickr_Photostream() {
@@ -104,21 +103,23 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		}else{
 
 			if (!($rss = $this->getRSS($instance)))
+			{
+				echo "no content";
 				return;
+			}
 
 			$pix = array();
 
-			$items = array_slice($rss->items, 0, $num_items);
+			$items = array_slice($rss['items'], 0, $num_items);
 
+			
+			
 			# builds html from array
 			foreach ( $items as $item ) {
-
+				
 				$count++;
 
-				if(!preg_match('<img src="([^"]*)" [^/]*/>', $item['description'], $imgUrlMatches)) {
-					continue;
-				}
-				$baseurl = str_replace("_m.jpg", "", $imgUrlMatches[1]);
+				$baseurl = str_replace("_m.jpg", "", $item["m_url"]);
 				$thumbnails = array(
 					'small' => $baseurl . "_m.jpg",
 					'square' => $baseurl . "_s.jpg",
@@ -126,17 +127,19 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					'medium' => $baseurl . ".jpg",
 					'large' => $baseurl . "_b.jpg"
 				);
-
+				
 				#check if there is an image title (for html validation purposes)
 				if($item['title'] !== "")
 					$pic_title = htmlspecialchars(stripslashes($item['title']));
 				else
 					$pic_title = $default_title;
 
-				$pic_url = $item['link'];
+				$pic_url = $item['url'];
 
 				$cachePath = trailingslashit($cache_uri);
 				$fullPath = trailingslashit($cache_path);
+
+				$pic_real_path = '';
 
 				#build array with pix path and if applicable, cache them
 				foreach ($thumbnails as $size => $thumbnail) {
@@ -148,14 +151,14 @@ class Simple_Flickr_Photostream extends WP_Widget {
 							$cachePath &&
 							$fullPath
 					) {
-						$img_to_cache = $thumbnail;
-						preg_match('<http://farm[0-9]{0,3}\.static.flickr\.com/\d+?\/([^.]*)\.jpg>', $img_to_cache, $flickrSlugMatches);
+						
+						preg_match('<http://farm[0-9]{0,3}\.staticflickr\.com/\d+?\/([^.]*)\.jpg>', $thumbnail, $flickrSlugMatches);
 						$flickrSlug = $flickrSlugMatches[1];
 
 						if (!file_exists("$fullPath$flickrSlug.jpg")) {
 							
 							$localimage = fopen("$fullPath$flickrSlug.jpg", 'wb');
-							$remoteimage = wp_remote_fopen($img_to_cache);
+							$remoteimage = wp_remote_fopen($thumbnail);
 							$iscached = fwrite($localimage,$remoteimage);
 							fclose($localimage);
 							
@@ -405,23 +408,38 @@ class Simple_Flickr_Photostream extends WP_Widget {
 	}
 
 	function getRSS($settings) {
-		if (!function_exists('MagpieRSS')) {
-			// Check if another plugin is using RSS, may not work
-			include_once (ABSPATH . WPINC . '/rss.php');
-			error_reporting(E_ERROR);
-		}
-		// get the feeds
-		if ($settings['type'] == "user") { $rss_url = 'http://api.flickr.com/services/feeds/photos_public.gne?id=' . $settings['id'] . '&tags=' . $settings['tags'] . '&format=rss_200'; }
-		elseif ($settings['type'] == "favorite") { $rss_url = 'http://api.flickr.com/services/feeds/photos_faves.gne?id=' . $settings['id'] . '&format=rss_200'; }
-		elseif ($settings['type'] == "set") { $rss_url = 'http://api.flickr.com/services/feeds/photoset.gne?set=' . $settings['set'] . '&nsid=' . $settings['id'] . '&format=rss_200'; }
-		elseif ($settings['type'] == "group") { $rss_url = 'http://api.flickr.com/services/feeds/groups_pool.gne?id=' . $settings['id'] . '&format=rss_200'; }
-		elseif ($settings['type'] == "public" || $settings['type'] == "community") { $rss_url = 'http://api.flickr.com/services/feeds/photos_public.gne?tags=' . $settings['tags'] . '&format=rss_200'; }
+		
+		$format = "php_serial";
+		
+		if ($settings['type'] == "user") { $rss_url = 'http://api.flickr.com/services/feeds/photos_public.gne?id=' . $settings['id'] . '&tags=' . $settings['tags'] . '&format='.$format; }
+		elseif ($settings['type'] == "favorite") { $rss_url = 'http://api.flickr.com/services/feeds/photos_faves.gne?id=' . $settings['id'] . '&format='.$format; }
+		elseif ($settings['type'] == "set") { $rss_url = 'http://api.flickr.com/services/feeds/photoset.gne?set=' . $settings['set'] . '&nsid=' . $settings['id'] . '&format='.$format; }
+		elseif ($settings['type'] == "group") { $rss_url = 'http://api.flickr.com/services/feeds/groups_pool.gne?id=' . $settings['id'] . '&format='.$format; }
+		elseif ($settings['type'] == "public" || $settings['type'] == "community") { $rss_url = 'http://api.flickr.com/services/feeds/photos_public.gne?tags=' . $settings['tags'] . '&format='.$format; }
 		else {
 			print '<strong>No "type" parameter has been setup. Check your settings, or provide the parameter as an argument.</strong>';
 			die();
 		}
-		# get rss file
-		return @fetch_rss($rss_url);
+				
+		
+		if(function_exists("curl_init"))	
+		{
+			$ch = curl_init(); // open curl session
+
+			// set curl options
+			curl_setopt($ch, CURLOPT_URL, $rss_url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);    
+			$object = curl_exec($ch); // execute curl session
+			curl_close($ch); // close curl session
+		}
+		else
+		{
+			$object = file_get_contents($rss_url, false);
+		}
+
+		$object = unserialize($object);
+
+		return $object;
 	}
 
 }
