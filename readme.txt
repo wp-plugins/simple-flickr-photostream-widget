@@ -29,6 +29,9 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
+= 1.3.4 =
+* Added possibility to have 1 random picture out the 20 returned by flickr. In the dropdown for the number of pictures select "Random (1)". You will probably also want to disable caching with this option.
+
 = 1.3.3 =
 * Implementation change: now using cURL instead of deprecated magpie RSS parser. Falling back to file_get_contents if no cURL found.
 * Bug fix: cache problem that was showing always the same pics. 

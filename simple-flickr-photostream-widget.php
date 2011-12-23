@@ -4,7 +4,7 @@ Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: New version with improved caching. You might want to clean up the old cache files before using the new version (in your upload folder). Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.3.3
+Version: 1.3.2
 Author URI:http://www.ai-development.com/
 */
 
@@ -110,9 +110,15 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 			$pix = array();
 
-			$items = array_slice($rss['items'], 0, $num_items);
-
-			
+			if(!$num_items == "random")
+			{
+				$items = array_slice($rss['items'], 0, $num_items);
+			}
+			else
+			{
+				$rand_keys = array_rand($rss['items'], 1);
+				$items = array($rss['items'][$rand_keys]);
+			}
 			
 			# builds html from array
 			foreach ( $items as $item ) {
@@ -307,6 +313,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		<p>
 			<label for="<?php echo $this->get_field_id( 'num_items' ); ?>">Display</label>
 			<select name="<?php echo $this->get_field_name( 'num_items' ); ?>" id="<?php echo $this->get_field_id( 'num_items' ); ?>">
+				<option <?php if ($instance['num_items'] == "random") { echo 'selected'; } ?> value="random">Random (1)</option>
 				<?php for ($i=1; $i<=20; $i++) { ?>
 					<option <?php if ($instance['num_items'] == $i) { echo 'selected'; } ?> value="<?php echo $i; ?>"><?php echo $i; ?></option>
 				<?php } ?>
