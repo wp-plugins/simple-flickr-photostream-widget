@@ -29,6 +29,9 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
+= 1.3.5 =
+* Fixing bug introduced in 1.3.4 where the widget would always display 1 random picture. Noob error sorry...
+
 = 1.3.4 =
 * Added possibility to have 1 random picture out the 20 returned by flickr. In the dropdown for the number of pictures select "Random (1)". You will probably also want to disable caching with this option.
 
