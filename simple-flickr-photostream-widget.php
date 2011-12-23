@@ -110,7 +110,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 			$pix = array();
 
-			if($num_items == "random")
+			if($num_items != "random")
 			{
 				$items = array_slice($rss['items'], 0, $num_items);
 			}
