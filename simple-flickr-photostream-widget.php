@@ -2,14 +2,14 @@
 /*
 Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
-Description: New version with improved caching. You might want to clean up the old cache files before using the new version (in your upload folder). Display a Flickr Photostream in any widgetized area
+Description: Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.3.5
+Version: 1.3.6
 Author URI:http://www.ai-development.com/
 */
 
 class Sfps_init{
-
+	
 	function Sfps_init(){
 	
 		if(!get_option('sfps_cache')){
@@ -30,7 +30,12 @@ class Sfps_init{
 	function simple_flickr_admin_head(){ ?>
 
 		<script type="text/javascript">
-			function toggleCache(a,b){jQuery("#"+a).is(":checked")?jQuery("#"+b).show():jQuery("#"+b).hide()} function toggleSource(a){if(jQuery("#"+a).val()=="user"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}if(jQuery("#"+a).val()=="set"){jQuery("#"+a).parent().nextAll("p.set_parent").show();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="favorite"){jQuery("#"+a).parent().nextAll("p.set_parent").hide(); jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="group"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="public"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").hide();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}};
+			function sfps_toggleCache(a,b){jQuery("#"+a).is(":checked")?jQuery("#"+b).show():jQuery("#"+b).hide()};
+			function sfps_toggleSource(a){if(jQuery("#"+a).val()=="user"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}if(jQuery("#"+a).val()=="set"){jQuery("#"+a).parent().nextAll("p.set_parent").show();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="favorite"){jQuery("#"+a).parent().nextAll("p.set_parent").hide(); jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="group"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").show();jQuery("#"+a).parent().nextAll("p.tags_parent").hide()}if(jQuery("#"+a).val()=="public"){jQuery("#"+a).parent().nextAll("p.set_parent").hide();jQuery("#"+a).parent().nextAll("p.id_parent").hide();jQuery("#"+a).parent().nextAll("p.tags_parent").show()}};
+			function sfps_restoreDefault(id)
+			{
+				jQuery("#"+id).val(window.sfps_template);
+			}
 		</script>
 
 	<?php
@@ -44,14 +49,12 @@ class Sfps_init{
 	function sfps_delete_cache(){
 		$cache_all = get_option('sfps_cache');
 
-		//echo '<pre>'.print_r($cache_all, true).'</pre>';
-
 		foreach($cache_all as $widgetid => $cache){
 			if($widgetid == 'expire') continue;
 			
 			foreach($cache as $pic){
 				foreach($pic['cache_real_path'] as $picpath){
-					//echo $picpath."<br />";
+
 					chmod($picpath, 0777);
 					#make sure we are talking about a file here, don't want to delete random stuff or worst
 					if(is_file($picpath)){
@@ -61,13 +64,19 @@ class Sfps_init{
 			}
 		}
 		update_option('sfps_cache', array());
-	}
-
+	}	
 }
 
 class Simple_Flickr_Photostream extends WP_Widget {
 
 	function Simple_Flickr_Photostream() {
+		
+		$this->defaultTemplate  = '<li class="picture-item %classes%">';
+		$this->defaultTemplate .=	'<a href="%flickr_page%" title="%title% by %author_name%">';
+		$this->defaultTemplate .=		'<img src="%image_square%" alt="%title% by %author_name%"/>';
+		$this->defaultTemplate .=	'</a>';
+		$this->defaultTemplate .= '</li>';
+		
 		/* Widget settings. */
 		$widget_ops = array( 'classname' => 'simple-flickr-photostream', 'description' => 'Display a Flickr Photostream' );
 
@@ -124,7 +133,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			foreach ( $items as $item ) {
 				
 				$count++;
-
+				
 				$baseurl = str_replace("_m.jpg", "", $item["m_url"]);
 				$thumbnails = array(
 					'small' => $baseurl . "_m.jpg",
@@ -141,6 +150,8 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					$pic_title = $default_title;
 
 				$pic_url = $item['url'];
+				$author_name = $item['author_name'];
+				$author_profile = $item['author_url'];
 
 				$cachePath = trailingslashit($cache_uri);
 				$fullPath = trailingslashit($cache_path);
@@ -182,6 +193,8 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 				$pix[] = array(
 					'title' => $pic_title,
+					'author_name' => $author_name,
+					'author_url' => $author_profile,
 					'url' => $pic_url,
 					'cache' => $cache_pic,
 					'cache_real_path' => $pic_real_path
@@ -224,6 +237,8 @@ class Simple_Flickr_Photostream extends WP_Widget {
 
 			$toprint = str_replace("%flickr_page%", $pic['url'], $toprint);
 			$toprint = str_replace("%title%", $pic['title'], $toprint);
+			$toprint = str_replace("%author_name%", $pic['author_name'], $toprint);
+			$toprint = str_replace("%author_url%", $pic['author_url'], $toprint);
 
 			foreach($pic['cache'] as $size => $path){
 				$toprint = str_replace("%image_".$size."%", $path, $toprint);
@@ -297,7 +312,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 				// - %flickr_page%
 				// - %title%
 				// - %image_small%, %image_square%, %image_thumbnail%, %image_medium%, %image_large%
-				'html' => '<li class="picture-item %classes%"><a href="%flickr_page%" title="%title%"><img src="%image_square%" alt="%title%"/></a></li>',
+				'html' => $this->defaultTemplate,
 				// the default title
 				'default_title' => "Untitled Flickr photo",
 				// the HTML to print after the list of images
@@ -318,7 +333,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 					<option <?php if ($instance['num_items'] == $i) { echo 'selected'; } ?> value="<?php echo $i; ?>"><?php echo $i; ?></option>
 				<?php } ?>
 			</select>
-			<select onchange="javascript: toggleSource('<?php echo $this->get_field_id( 'type' ); ?>');" name="<?php echo $this->get_field_name( 'type' ); ?>" id="<?php echo $this->get_field_id( 'type' ); ?>">
+			<select onchange="javascript: sfps_toggleSource('<?php echo $this->get_field_id( 'type' ); ?>');" name="<?php echo $this->get_field_name( 'type' ); ?>" id="<?php echo $this->get_field_id( 'type' ); ?>">
 				<option <?php if($instance['type'] == 'user') { echo 'selected'; } ?> value="user">user</option>
 				<option <?php if($instance['type'] == 'set') { echo 'selected'; } ?> value="set">set</option>
 				<option <?php if($instance['type'] == 'favorite') { echo 'selected'; } ?> value="favorite">favorite</option>
@@ -342,7 +357,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			<small>Comma separated, no spaces</small>
 		</p>
 		<script type="text/javascript">
-			toggleSource('<?php echo $this->get_field_id( 'type' ); ?>');
+			sfps_toggleSource('<?php echo $this->get_field_id( 'type' ); ?>');
 		</script>
 		<div>
 			<p><label for="<?php echo $this->get_field_id( 'before_list' ); ?>">Before List:</label><br/><input class="widefat" name="<?php echo $this->get_field_name( 'before_list' ); ?>" type="text" id="<?php echo $this->get_field_id( 'before_list' ); ?>" value="<?php echo htmlspecialchars(stripslashes($instance['before_list'])); ?>" /></p>
@@ -350,17 +365,20 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			<p><label for="<?php echo $this->get_field_id( 'html' ); ?>">Item HTML:</label></p>
 			<p>Allowed tags: <code>%flickr_page%</code>
 				<code>%title%</code>
+				<code>%author_name%</code>
+				<code>%author_url%</code>
 				<code>%image_square%</code>
 				<code>%image_small%</code>
 				<code>%image_thumbnail%</code>
 				<code>%image_medium%</code>
 				<code>%image_large%</code>
-				<code>%classes%</code> <small>(item number and 'first'/'last')</small>
+				<code title="(item number and 'first'/'last')">%classes%</code>
 			</p>
 			<p>
 				<textarea name="<?php echo $this->get_field_name( 'html' ); ?>" type="text" id="<?php echo $this->get_field_id( 'html' ); ?>" style="width:400px;" rows="10"><?php echo htmlspecialchars(stripslashes($instance['html'])); ?></textarea>
+				<script type="text/javascript">var sfps_template = '<?php echo $this->defaultTemplate ?>';</script>
+				<br /><small><a href="javascript: sfps_restoreDefault('<?php echo $this->get_field_id( 'html' ); ?>');">restore default template</a></small>
 			</p>
-
 
 
 			<p><label for="<?php echo $this->get_field_id( 'after_list' ); ?>">After List:</label><br/> <input class="widefat" name="<?php echo $this->get_field_name( 'after_list' ); ?>" type="text" id="<?php echo $this->get_field_id( 'after_list' ); ?>" value="<?php echo htmlspecialchars(stripslashes($instance['after_list'])); ?>" /></p>
@@ -372,7 +390,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			<p>
 				<label for="<?php echo $this->get_field_id( 'do_cache' ); ?>">Turn on caching:</label>
 				<input name="<?php echo $this->get_field_name( 'do_cache' ); ?>" type="checkbox" id="<?php echo $this->get_field_id( 'do_cache' ); ?>" <?php echo $instance['do_cache']==1?'checked="checked"':''; ?> value="1"
-					   onclick="javascript: toggleCache('<?php echo $this->get_field_id( 'do_cache' ); ?>', '<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>');"
+					   onclick="javascript: sfps_toggleCache('<?php echo $this->get_field_id( 'do_cache' ); ?>', '<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>');"
 					   />
 			</p>
 
@@ -408,7 +426,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 				</p>
 			</div>
 			<script type="text/javascript">
-				toggleCache('<?php echo $this->get_field_id( 'do_cache' ); ?>', '<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>');
+				sfps_toggleCache('<?php echo $this->get_field_id( 'do_cache' ); ?>', '<?php echo $this->get_field_id( 'flickr-widget-do_cache' ); ?>');
 			</script>
 		</div>
 		<?php
@@ -426,8 +444,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 		else {
 			print '<strong>No "type" parameter has been setup. Check your settings, or provide the parameter as an argument.</strong>';
 			die();
-		}
-				
+		}			
 		
 		if(function_exists("curl_init"))	
 		{
@@ -436,6 +453,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			// set curl options
 			curl_setopt($ch, CURLOPT_URL, $rss_url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);    
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOU, 15);
 			$object = curl_exec($ch); // execute curl session
 			curl_close($ch); // close curl session
 		}

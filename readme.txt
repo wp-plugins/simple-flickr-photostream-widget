@@ -29,6 +29,11 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
+= 1.3.6 =
+* Added author_url and author_name tags for widget template
+* Added curl timeout when retreiving the data to not lock the page if Flickr is down.
+* Added "default template" button to go back to the default template if you've messed things up.
+
 = 1.3.5 =
 * Fixing bug introduced in 1.3.4 where the widget would always display 1 random picture. Noob error sorry...
 
