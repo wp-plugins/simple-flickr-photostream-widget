@@ -29,6 +29,9 @@ If you are upgrading from previous version, do not forget to backup!
 
 == Changelog ==
 
+= 1.3.7 =
+* Fixed missing "T" in the curl timeout option added in 1.3.6. Thanks Chris.
+
 = 1.3.6 =
 * Added author_url and author_name tags for widget template
 * Added curl timeout when retreiving the data to not lock the page if Flickr is down.

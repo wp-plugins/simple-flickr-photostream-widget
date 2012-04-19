@@ -4,7 +4,7 @@ Plugin Name: Simple Flickr Photostream
 Plugin URI: http://www.ai-development.com/wordpress-plugins/simple-flickr-photostream-widget
 Description: Display a Flickr Photostream in any widgetized area
 Author: Benoit Gilloz
-Version: 1.3.6
+Version: 1.3.7
 Author URI:http://www.ai-development.com/
 */
 
@@ -453,7 +453,7 @@ class Simple_Flickr_Photostream extends WP_Widget {
 			// set curl options
 			curl_setopt($ch, CURLOPT_URL, $rss_url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);    
-			curl_setopt($ch, CURLOPT_CONNECTTIMEOU, 15);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 15);
 			$object = curl_exec($ch); // execute curl session
 			curl_close($ch); // close curl session
 		}
